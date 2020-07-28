@@ -13,15 +13,27 @@ var todos=[]*Todo{{Id:1,Name:"name1",Completed:false},{Id:2,Name:"name2",Complet
 func main(){
 	app := fiber.New()
 	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
 	app.Get( "/" , func(ctx *fiber.Ctx){ ctx.Send("hello world")	})
-	app.Get( "/todos" , GetTodos)
-	app.Post( "/todos" , CreateTodo)
-	app.Get( "/todos/:id" , GetTodo)
-	app.Delete( "/todos/:id" , DeleteTodo)
-	app.Patch( "/todos/:id" , UpdateTodo)
+	SetupApiV1(app)
+	//SetupTodosRoutes(app)
 	err:=app.Listen(3000)
 	if err != nil { panic(err) }
 }
+func SetupApiV1(app *fiber.App) {
+	v1 := app.Group("/v1")
+	SetupTodosRoutes(v1)
+}
+
+func SetupTodosRoutes(grp fiber.Router) {
+	todosRoutes :=grp.Group( "/todos")
+	todosRoutes.Get( "/" , GetTodos)
+	todosRoutes.Post( "/" , CreateTodo)
+	todosRoutes.Get( "/:id" , GetTodo)
+	todosRoutes.Delete( "/:id" , DeleteTodo)
+	todosRoutes.Patch( "/:id" , UpdateTodo)
+}
+
 func UpdateTodo(ctx *fiber.Ctx) {
 	type request struct {
 		Name      *string `json:"name"`
